@@ -1,0 +1,8 @@
+import flet as ft
+
+API_BASE = "http://127.0.0.1:8000"
+PRIMARY_COLOR = ft.Colors.BLUE_600
+SECONDARY_COLOR = ft.Colors.BLUE_100
+BACKGROUND_COLOR = ft.Colors.GREY_50
+TEXT_COLOR = ft.Colors.GREY_900
+CARD_COLOR = ft.Colors.WHITE
