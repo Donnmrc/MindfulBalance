@@ -1,1 +1,1 @@
-# MindfulBalance_Finalproject
+# MindfulBalance
