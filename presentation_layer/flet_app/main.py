@@ -16,7 +16,7 @@ class LoginApp:
     
     def main(self, page: ft.Page):
         """Main application entry point."""
-        page.title = "Community Mental Health Tracker - Login"
+        page.title = "MindfulBalance - Login"
         page.theme_mode = ft.ThemeMode.LIGHT
         page.window_width = 400
         page.window_height = 500
