@@ -40,23 +40,23 @@ class LoginApp:
         
         # Title
         title = ft.Text(
-            "Mental Health Tracker",
+            "Welcome to MindfulBalance",
             size=24,
             weight=ft.FontWeight.BOLD,
-            color=ft.colors.BLUE_700
+            color=ft.Colors.BLUE_700
         )
         
         subtitle = ft.Text(
             "Sign in to your account",
             size=14,
-            color=ft.colors.GREY_600
+            color=ft.Colors.GREY_600
         )
         
         # Input fields
         self.username_field = ft.TextField(
             label="Username or Email",
             width=300,
-            prefix_icon=ft.icons.PERSON
+            prefix_icon=ft.Icons.PERSON
         )
         
         self.password_field = ft.TextField(
@@ -64,13 +64,13 @@ class LoginApp:
             width=300,
             password=True,
             can_reveal_password=True,
-            prefix_icon=ft.icons.LOCK
+            prefix_icon=ft.Icons.LOCK
         )
         
         # Error message display
         self.error_text = ft.Text(
             "",
-            color=ft.colors.RED_400,
+            color=ft.Colors.RED_400,
             size=12
         )
         
@@ -80,8 +80,8 @@ class LoginApp:
             width=300,
             on_click=lambda e: self.handle_login(page),
             style=ft.ButtonStyle(
-                bgcolor=ft.colors.BLUE_600,
-                color=ft.colors.WHITE
+                bgcolor=ft.Colors.BLUE_600,
+                color=ft.Colors.WHITE
             )
         )
         
@@ -89,7 +89,7 @@ class LoginApp:
         register_link = ft.TextButton(
             "Don't have an account? Sign up",
             on_click=lambda e: self.show_register_page(page),
-            style=ft.ButtonStyle(color=ft.colors.BLUE_600)
+            style=ft.ButtonStyle(color=ft.Colors.BLUE_600)
         )
         
         # Layout
@@ -107,12 +107,12 @@ class LoginApp:
                     register_link
                 ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
                 padding=40,
-                bgcolor=ft.colors.WHITE,
+                bgcolor=ft.Colors.WHITE,
                 border_radius=10,
                 shadow=ft.BoxShadow(
                     spread_radius=1,
                     blur_radius=15,
-                    color=ft.colors.BLUE_GREY_300,
+                    color=ft.Colors.BLUE_GREY_300,
                     offset=ft.Offset(0, 0)
                 )
             )
@@ -129,27 +129,27 @@ class LoginApp:
             "Create Account",
             size=24,
             weight=ft.FontWeight.BOLD,
-            color=ft.colors.GREEN_700
+            color=ft.Colors.GREEN_700
         )
         
         subtitle = ft.Text(
             "Join our mental health community",
             size=14,
-            color=ft.colors.GREY_600
+            color=ft.Colors.GREY_600
         )
         
         # Input fields
         self.reg_username_field = ft.TextField(
             label="Username",
             width=300,
-            prefix_icon=ft.icons.PERSON,
+            prefix_icon=ft.Icons.PERSON,
             helper_text="3-20 characters, letters, numbers, underscore only"
         )
         
         self.reg_email_field = ft.TextField(
             label="Email",
             width=300,
-            prefix_icon=ft.icons.EMAIL
+            prefix_icon=ft.Icons.EMAIL
         )
         
         self.reg_password_field = ft.TextField(
@@ -157,7 +157,7 @@ class LoginApp:
             width=300,
             password=True,
             can_reveal_password=True,
-            prefix_icon=ft.icons.LOCK,
+            prefix_icon=ft.Icons.LOCK,
             helper_text="Minimum 6 characters"
         )
         
@@ -166,13 +166,13 @@ class LoginApp:
             width=300,
             password=True,
             can_reveal_password=True,
-            prefix_icon=ft.icons.LOCK
+            prefix_icon=ft.Icons.LOCK
         )
         
         # Error message display
         self.reg_error_text = ft.Text(
             "",
-            color=ft.colors.RED_400,
+            color=ft.Colors.RED_400,
             size=12
         )
         
@@ -182,8 +182,8 @@ class LoginApp:
             width=300,
             on_click=lambda e: self.handle_register(page),
             style=ft.ButtonStyle(
-                bgcolor=ft.colors.GREEN_600,
-                color=ft.colors.WHITE
+                bgcolor=ft.Colors.GREEN_600,
+                color=ft.Colors.WHITE
             )
         )
         
@@ -191,7 +191,7 @@ class LoginApp:
         login_link = ft.TextButton(
             "Already have an account? Sign in",
             on_click=lambda e: self.show_login_page(page),
-            style=ft.ButtonStyle(color=ft.colors.BLUE_600)
+            style=ft.ButtonStyle(color=ft.Colors.BLUE_600)
         )
         
         # Layout
@@ -211,12 +211,12 @@ class LoginApp:
                     login_link
                 ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
                 padding=40,
-                bgcolor=ft.colors.WHITE,
+                bgcolor=ft.Colors.WHITE,
                 border_radius=10,
                 shadow=ft.BoxShadow(
                     spread_radius=1,
                     blur_radius=15,
-                    color=ft.colors.BLUE_GREY_300,
+                    color=ft.Colors.BLUE_GREY_300,
                     offset=ft.Offset(0, 0)
                 )
             )
@@ -267,7 +267,7 @@ class LoginApp:
         success_text = ft.Text(
             message,
             size=16,
-            color=ft.colors.GREEN_600,
+            color=ft.Colors.GREEN_600,
             text_align=ft.TextAlign.CENTER
         )
         
@@ -275,27 +275,27 @@ class LoginApp:
             "Go to Login",
             on_click=lambda e: self.show_login_page(page),
             style=ft.ButtonStyle(
-                bgcolor=ft.colors.BLUE_600,
-                color=ft.colors.WHITE
+                bgcolor=ft.Colors.BLUE_600,
+                color=ft.Colors.WHITE
             )
         )
         
         page.add(
             ft.Container(
                 content=ft.Column([
-                    ft.Icon(ft.icons.CHECK_CIRCLE, color=ft.colors.GREEN_600, size=50),
+                    ft.Icon(ft.Icons.CHECK_CIRCLE, color=ft.Colors.GREEN_600, size=50),
                     ft.Container(height=20),
                     success_text,
                     ft.Container(height=20),
                     login_btn
                 ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
                 padding=40,
-                bgcolor=ft.colors.WHITE,
+                bgcolor=ft.Colors.WHITE,
                 border_radius=10,
                 shadow=ft.BoxShadow(
                     spread_radius=1,
                     blur_radius=15,
-                    color=ft.colors.BLUE_GREY_300,
+                    color=ft.Colors.BLUE_GREY_300,
                     offset=ft.Offset(0, 0)
                 )
             )
@@ -311,21 +311,21 @@ class LoginApp:
             f"Welcome, {self.current_user.username}!",
             size=24,
             weight=ft.FontWeight.BOLD,
-            color=ft.colors.BLUE_700
+            color=ft.Colors.BLUE_700
         )
         
         subtitle = ft.Text(
             "Community Mental Health Tracker Dashboard",
             size=16,
-            color=ft.colors.GREY_600
+            color=ft.Colors.GREY_600
         )
         
         logout_btn = ft.ElevatedButton(
             "Logout",
             on_click=lambda e: self.logout(page),
             style=ft.ButtonStyle(
-                bgcolor=ft.colors.RED_600,
-                color=ft.colors.WHITE
+                bgcolor=ft.Colors.RED_600,
+                color=ft.Colors.WHITE
             )
         )
         
@@ -337,7 +337,7 @@ class LoginApp:
             "• Analytics\n"
             "• Coping strategies",
             size=14,
-            color=ft.colors.GREY_700
+            color=ft.Colors.GREY_700
         )
         
         page.add(
@@ -351,12 +351,12 @@ class LoginApp:
                     logout_btn
                 ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
                 padding=40,
-                bgcolor=ft.colors.WHITE,
+                bgcolor=ft.Colors.WHITE,
                 border_radius=10,
                 shadow=ft.BoxShadow(
                     spread_radius=1,
                     blur_radius=15,
-                    color=ft.colors.BLUE_GREY_300,
+                    color=ft.Colors.BLUE_GREY_300,
                     offset=ft.Offset(0, 0)
                 )
             )
