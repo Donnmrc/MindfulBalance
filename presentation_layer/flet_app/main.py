@@ -1,6 +1,12 @@
 # presentation_layer/flet_app/main.py
 import os
 import sys
+import matplotlib
+import matplotlib.pyplot as plt
+matplotlib.use('Agg')
+import matplotlib.dates as mdates
+from datetime import datetime, timedelta
+import numpy as np
 
 # Add project root directory to Python path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -40,6 +46,191 @@ class LoginApp:
         
         # Show welcome screen initially
         self.show_welcome_screen(page)
+
+    def create_mood_plots(self, page: ft.Page):
+        """Create and display mood trend plots using matplotlib."""
+        if not self.current_user:
+            return
+
+        try:
+            print("Starting to create mood plots...")  # Debug
+            
+            # Get mood history for the last 30 days
+            mood_history = self.mood_service.get_user_mood_history(self.current_user.user_id, 30)
+            print(f"Retrieved {len(mood_history)} mood entries")  # Debug
+
+            if not mood_history:
+                page.snack_bar = ft.SnackBar(
+                    content=ft.Text("No mood data available for plotting"),
+                    bgcolor=ft.Colors.ORANGE_600
+                )
+                page.snack_bar.open = True
+                page.update()
+                return
+
+            # Prepare data for plotting
+            dates = []
+            mood_levels = []
+            journal_counts = {}
+
+            for mood in mood_history:
+                if mood.timestamp:
+                    # Handle different timestamp formats
+                    if isinstance(mood.timestamp, str):
+                        try:
+                            timestamp = datetime.fromisoformat(mood.timestamp)
+                        except:
+                            timestamp = datetime.strptime(mood.timestamp, '%Y-%m-%d %H:%M:%S')
+                    else:
+                        timestamp = mood.timestamp
+                    
+                    date = timestamp.date()
+                    dates.append(date)
+                    mood_levels.append(mood.mood_level)
+
+                    # Count journal entries (notes)
+                    if mood.notes and mood.notes.strip():
+                        journal_counts[date] = journal_counts.get(date, 0) + 1
+
+            if not dates:
+                page.snack_bar = ft.SnackBar(
+                    content=ft.Text("No valid mood data for plotting"),
+                    bgcolor=ft.Colors.ORANGE_600
+                )
+                page.snack_bar.open = True
+                page.update()
+                return
+
+            print(f"Processed {len(dates)} data points for plotting")  # Debug
+
+            # Create the plots
+            plt.style.use('default')  # Ensure we're using default style
+            fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(12, 10))
+            fig.suptitle(f'Mental Health Dashboard - {self.current_user.username}', fontsize=16, fontweight='bold')
+
+            # Plot 1: Mood Trends
+            ax1.plot(dates, mood_levels, marker='o', linestyle='-', linewidth=2, markersize=6, color='#2E86AB')
+            ax1.set_title('Mood Trends Over Time', fontweight='bold')
+            ax1.set_ylabel('Mood Level (1-10)')
+            ax1.grid(True, alpha=0.3)
+            ax1.set_ylim(0, 11)
+
+            # Add mood level labels
+            mood_labels = {1: 'Terrible', 3: 'Bad', 5: 'Okay', 7: 'Good', 10: 'Excellent'}
+            for level, label in mood_labels.items():
+                ax1.axhline(y=level, color='gray', linestyle='--', alpha=0.3)
+                ax1.text(min(dates), level, label, fontsize=8, alpha=0.7)
+
+            # Plot 2: Journaling Frequency
+            if journal_counts:
+                journal_dates = list(journal_counts.keys())
+                journal_freq = list(journal_counts.values())
+                ax2.bar(journal_dates, journal_freq, color='#A23B72', alpha=0.7)
+                ax2.set_title('Journaling Frequency', fontweight='bold')
+                ax2.set_ylabel('Journal Entries')
+            else:
+                ax2.text(0.5, 0.5, 'No journal entries available', 
+                        transform=ax2.transAxes, ha='center', va='center', fontsize=12)
+                ax2.set_title('Journaling Frequency', fontweight='bold')
+                ax2.set_ylabel('Journal Entries')
+
+            # Plot 3: Wellness Score (7-day rolling average)
+            if len(mood_levels) >= 7:
+                wellness_scores = []
+                wellness_dates = []
+
+                for i in range(6, len(mood_levels)):
+                    window_moods = mood_levels[i-6:i+1]
+                    wellness_score = sum(window_moods) / len(window_moods)
+                    wellness_scores.append(wellness_score)
+                    wellness_dates.append(dates[i])
+
+                ax3.fill_between(wellness_dates, wellness_scores, alpha=0.3, color='#F18F01')
+                ax3.plot(wellness_dates, wellness_scores, color='#F18F01', linewidth=2)
+                ax3.set_title('Wellness Score (7-day Average)', fontweight='bold')
+                ax3.set_ylabel('Wellness Score')
+                ax3.set_ylim(0, 11)
+            else:
+                ax3.text(0.5, 0.5, 'Need at least 7 mood entries for wellness score', 
+                        transform=ax3.transAxes, ha='center', va='center', fontsize=12)
+                ax3.set_title('Wellness Score (7-day Average)', fontweight='bold')
+                ax3.set_ylabel('Wellness Score')
+
+            # Format x-axis for all plots
+            for ax in [ax1, ax2, ax3]:
+                if len(dates) > 1:
+                    ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
+                    ax.xaxis.set_major_locator(mdates.DayLocator(interval=max(1, len(dates)//10)))
+                    plt.setp(ax.xaxis.get_majorticklabels(), rotation=45)
+
+            plt.tight_layout()
+
+            # Save plot as image
+            plot_dir = os.path.dirname(__file__)
+            plot_path = os.path.join(plot_dir, 'mood_plot.png')
+            print(f"Saving plot to: {plot_path}")  # Debug
+            
+            plt.savefig(plot_path, dpi=150, bbox_inches='tight')
+            plt.close()  # Close to free memory
+
+            print("Plot saved successfully, showing dialog...")  # Debug
+            
+            # Show the plot in a dialog
+            self.show_plot_dialog(page, plot_path)
+
+        except Exception as e:
+            print(f"Error creating plots: {str(e)}")  # Debug
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text(f"Error creating plots: {str(e)}"),
+                bgcolor=ft.Colors.RED_600
+            )
+            page.snack_bar.open = True
+            page.update()
+
+    def show_plot_dialog(self, page: ft.Page, plot_path: str):
+        """Display the matplotlib plot in a dialog."""
+        try:
+            print(f"Showing plot dialog for: {plot_path}")  # Debug
+
+            # Check if file exists
+            if not os.path.exists(plot_path):
+                raise FileNotFoundError(f"Plot file not found: {plot_path}")
+
+            plot_image = ft.Image(
+                src=plot_path,
+                width=800,
+                height=600,
+                fit=ft.ImageFit.CONTAIN
+            )
+
+            def close_plot(e):
+                page.dialog.open = False
+                page.update()
+
+            dialog = ft.AlertDialog(
+                title=ft.Text("Your Mental Health Analytics", size=18, weight=ft.FontWeight.BOLD),
+                content=ft.Container(
+                    content=plot_image,
+                    width=800,
+                    height=600
+                ),
+                actions=[
+                    ft.TextButton("Close", on_click=close_plot)
+                ],
+                open=True
+            )
+
+            page.dialog = dialog
+            page.update()
+
+        except Exception as e:
+            print(f"Error displaying plot: {str(e)}")  # Debug
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text(f"Error displaying plot: {str(e)}"),
+                bgcolor=ft.Colors.RED_600
+            )
+            page.snack_bar.open = True
+            page.update()
 
     def show_welcome_screen(self, page: ft.Page):
         """Display the initial welcome screen"""
@@ -401,6 +592,16 @@ class LoginApp:
             padding=20
         )
 
+        # Analytics button
+        analytics_btn = ft.ElevatedButton(
+    "📊 View Analytics",
+    on_click=lambda e: self.create_mood_plots(page),
+    style=ft.ButtonStyle(
+        bgcolor=ft.Colors.PURPLE_600,
+        color=ft.Colors.WHITE
+    )
+)
+
         # Mood tracking section
         mood_section = self.create_mood_section(page)
         
@@ -427,6 +628,8 @@ class LoginApp:
         # Add all sections to page
         page.add(
             header,
+            ft.Container(height=10),
+            analytics_btn,  # Add this line
             ft.Container(height=20),
             mood_section,
             ft.Container(height=20),

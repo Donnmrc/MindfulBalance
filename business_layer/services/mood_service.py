@@ -15,37 +15,18 @@ class MoodService:
     def log_mood(self, user_id: int, mood_level: int) -> Tuple[bool, str, Optional[dict]]:
         """Log a new mood entry and return updated statistics."""
         try:
-            conn = self.db.get_connection()
-            cursor = conn.cursor()
-            
-            # Insert new mood entry
-            cursor.execute(
-                "INSERT INTO moods (user_id, mood_level) VALUES (?, ?)",
-                (user_id, mood_level)
-            )
-            conn.commit()
-            
-            # Get updated statistics
-            cursor.execute("""
-                SELECT COUNT(*) as total,
-                       AVG(mood_level) as average
-                FROM moods
-                WHERE user_id = ?
-            """, (user_id,))
-            
-            total, average = cursor.fetchone()
-            
-            return True, "Mood logged successfully", {
-                "total_entries": total,
-                "average_mood": round(float(average) if average else 0, 1)
-            }
-            
+            # Use DAO to insert into mood_logs
+            mood_id = self.mood_dao.create_mood_entry(user_id, mood_level)
+            if mood_id is None:
+                return False, "Failed to log mood", None
+
+            # Get updated statistics from mood_logs
+            stats = self.mood_dao.get_mood_statistics(user_id)
+            return True, "Mood logged successfully", stats
+
         except Exception as e:
             print(f"Error logging mood: {e}")
             return False, str(e), None
-        finally:
-            if 'conn' in locals():
-                conn.close()
 
     def get_today_mood(self, user_id: int) -> Optional[Mood]:
         """
