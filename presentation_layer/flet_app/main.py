@@ -23,8 +23,9 @@ class LoginApp:
         self.average_mood_text = ft.Text("0.0", size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_600)
         self.total_entries_text = ft.Text("0", size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.GREEN_600)
         self.latest_journal = ""  # <-- Add this line
+        self.last_mood_level = None  # Track last mood selected
         
-        # Initialize database
+        # Initialize databaseeeeeee
         db = DatabaseConnection()
         db.initialize_database()
 
@@ -540,20 +541,21 @@ class LoginApp:
             page.update()
             return
 
+        self.last_mood_level = mood_level  # Store the last mood selected
+
         success, message, stats = self.mood_service.log_mood(
             self.current_user.user_id,
             mood_level
         )
 
         if success and stats:
-            # Update the stats text fields directly
             self.average_mood_text.value = f"{stats['average_mood']:.1f}"
             self.total_entries_text.value = str(stats['total_entries'])
             page.snack_bar = ft.SnackBar(
                 content=ft.Text("Mood logged successfully!"),
                 bgcolor=ft.Colors.GREEN_600
             )
-            self.show_hello_dialog(page)  # Show the hello dialog
+            self.show_hello_dialog(page)
             page.update()
         else:
             page.snack_bar = ft.SnackBar(
@@ -608,6 +610,18 @@ class LoginApp:
             page.dialog.open = False
             page.update()
             self.show_dashboard(page)  # Refresh dashboard to show the journal
+            # Show mental tip after dashboard refresh
+            tip = self.get_mental_tip(self.last_mood_level)
+            tip_dialog = ft.AlertDialog(
+                title=ft.Text("Mental Health Tip"),
+                content=ft.Text(tip),
+                actions=[ft.TextButton("OK", on_click=lambda e: self.close_tip_dialog(page))],
+                open=True
+            )
+            page.dialog = tip_dialog
+            if tip_dialog not in page.controls:
+                page.controls.append(tip_dialog)
+            page.update()
 
         def close_journal(e):
             page.dialog.open = False
@@ -626,6 +640,23 @@ class LoginApp:
         if dialog not in page.controls:
             page.controls.append(dialog)
         page.update()
+
+    def close_tip_dialog(self, page: ft.Page):
+        page.dialog.open = False
+        page.update()
+
+    def get_mental_tip(self, mood_level: int) -> str:
+        """Return a mental health tip based on mood level."""
+        if mood_level <= 2:
+            return "It's okay to feel down. Try talking to a friend or practicing deep breathing."
+        elif mood_level <= 4:
+            return "Take a short walk or listen to your favorite music to lift your mood."
+        elif mood_level <= 6:
+            return "Keep going! A little self-care goes a long way."
+        elif mood_level <= 8:
+            return "Great job! Remember to share your positivity with others."
+        else:
+            return "You're doing amazing! Keep up the positive mindset!"
 
 def main(page: ft.Page):
     app = LoginApp()
