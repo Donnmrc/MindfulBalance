@@ -2,49 +2,51 @@
 from typing import Optional, Tuple, List
 from business_layer.models.mood import Mood
 from data_layer.dao.mood_dao import MoodDAO
-from datetime import datetime
+from data_layer.database.connection import DatabaseConnection
+from datetime import datetime, timedelta
 
 class MoodService:
     """Business logic for mood operations."""
     
     def __init__(self):
+        self.db = DatabaseConnection()
         self.mood_dao = MoodDAO()
     
-    def log_mood(self, user_id: int, mood_level: int, notes: str = "") -> Tuple[bool, str, Optional[Mood]]:
-        """
-        Log a new mood entry.
-        
-        Args:
-            user_id: User ID
-            mood_level: Mood level (1-10)
-            notes: Optional notes about the mood
+    def log_mood(self, user_id: int, mood_level: int) -> Tuple[bool, str, Optional[dict]]:
+        """Log a new mood entry and return updated statistics."""
+        try:
+            conn = self.db.get_connection()
+            cursor = conn.cursor()
             
-        Returns:
-            Tuple of (success, message, mood_object)
-        """
-        # Validate input
-        if not user_id or user_id <= 0:
-            return False, "Invalid user ID", None
-        
-        if mood_level < 1 or mood_level > 10:
-            return False, "Mood level must be between 1 and 10", None
-        
-        # Create mood entry
-        mood_id = self.mood_dao.create_mood_entry(user_id, mood_level, notes)
-        
-        if mood_id:
-            # Create mood object
-            mood = Mood(
-                mood_id=mood_id,
-                user_id=user_id,
-                mood_level=mood_level,
-                notes=notes,
-                timestamp=datetime.now()
+            # Insert new mood entry
+            cursor.execute(
+                "INSERT INTO moods (user_id, mood_level) VALUES (?, ?)",
+                (user_id, mood_level)
             )
-            return True, "Mood logged successfully", mood
-        else:
-            return False, "Failed to log mood. Please try again.", None
-    
+            conn.commit()
+            
+            # Get updated statistics
+            cursor.execute("""
+                SELECT COUNT(*) as total,
+                       AVG(mood_level) as average
+                FROM moods
+                WHERE user_id = ?
+            """, (user_id,))
+            
+            total, average = cursor.fetchone()
+            
+            return True, "Mood logged successfully", {
+                "total_entries": total,
+                "average_mood": round(float(average) if average else 0, 1)
+            }
+            
+        except Exception as e:
+            print(f"Error logging mood: {e}")
+            return False, str(e), None
+        finally:
+            if 'conn' in locals():
+                conn.close()
+
     def get_today_mood(self, user_id: int) -> Optional[Mood]:
         """
         Get today's mood for a user.
@@ -97,35 +99,52 @@ class MoodService:
         mood_data_list = self.mood_dao.get_user_moods(user_id, limit)
         return [Mood.from_dict(mood_data) for mood_data in mood_data_list]
     
-    def get_mood_statistics(self, user_id: int, days: int = 30) -> dict:
-        """
-        Get mood statistics for a user.
-        
-        Args:
-            user_id: User ID
-            days: Number of days to analyze
+    def get_mood_statistics(self, user_id: int) -> dict:
+        """Get mood statistics for a user."""
+        try:
+            conn = self.db.get_connection()
+            cursor = conn.cursor()
             
-        Returns:
-            Dictionary with mood statistics
-        """
-        stats = self.mood_dao.get_mood_statistics(user_id, days)
-        
-        # Add interpretive information
-        if stats['average_mood'] > 0:
-            if stats['average_mood'] >= 8:
-                stats['mood_trend'] = "Excellent"
-            elif stats['average_mood'] >= 7:
-                stats['mood_trend'] = "Good"
-            elif stats['average_mood'] >= 5:
-                stats['mood_trend'] = "Fair"
-            elif stats['average_mood'] >= 3:
-                stats['mood_trend'] = "Poor"
-            else:
-                stats['mood_trend'] = "Concerning"
-        else:
-            stats['mood_trend'] = "No data"
-        
-        return stats
+            # Get total entries and average mood
+            cursor.execute("""
+                SELECT 
+                    COUNT(*) as total_entries,
+                    AVG(mood_level) as average_mood,
+                    MIN(mood_level) as lowest_mood,
+                    MAX(mood_level) as highest_mood
+                FROM moods 
+                WHERE user_id = ?
+            """, (user_id,))
+            
+            row = cursor.fetchone()
+            
+            if row:
+                total_entries = row[0]
+                average_mood = row[1] if row[1] is not None else 0
+                return {
+                    'total_entries': total_entries,
+                    'average_mood': round(average_mood, 1),
+                    'lowest_mood': row[2] if row[2] is not None else 0,
+                    'highest_mood': row[3] if row[3] is not None else 0
+                }
+            return {
+                'total_entries': 0,
+                'average_mood': 0,
+                'lowest_mood': 0,
+                'highest_mood': 0
+            }
+            
+        except Exception as e:
+            print(f"Error getting mood statistics: {e}")
+            return {
+                'total_entries': 0,
+                'average_mood': 0,
+                'lowest_mood': 0,
+                'highest_mood': 0
+            }
+        finally:
+            if 'conn' in locals():
+                conn.close()
     
     def get_mood_recommendations(self, user_id: int) -> List[str]:
         """

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # presentation_layer/flet_app/main.py
 import os
 import sys
@@ -11,7 +10,6 @@ import flet as ft
 from business_layer.services.user_service import UserService
 from business_layer.services.mood_service import MoodService
 from data_layer.database.connection import DatabaseConnection
-import matplotlib.pyplot as plt
 from io import BytesIO
 import base64
 
@@ -22,6 +20,8 @@ class LoginApp:
         self.user_service = UserService()
         self.mood_service = MoodService()
         self.current_user = None
+        self.average_mood_text = ft.Text("0.0", size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_600)
+        self.total_entries_text = ft.Text("0", size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.GREEN_600)
         
         # Initialize database
         db = DatabaseConnection()
@@ -305,7 +305,7 @@ class LoginApp:
         else:
             self.error_text.value = message
             page.update()
-    
+
     def handle_register(self, page: ft.Page):
         """Handle registration form submission."""
         username = self.reg_username_field.value
@@ -463,8 +463,10 @@ class LoginApp:
 
     def create_stats_section(self):
         """Create the statistics section"""
+        # Get stats
         mood_stats = self.mood_service.get_mood_statistics(self.current_user.user_id)
-        
+        self.average_mood_text.value = f"{mood_stats['average_mood']:.1f}"
+        self.total_entries_text.value = str(mood_stats['total_entries'])
         return ft.Container(
             content=ft.Column([
                 ft.Text(
@@ -475,180 +477,26 @@ class LoginApp:
                 ),
                 ft.Container(height=10),
                 ft.Row([
-                    self.create_stat_card("Average Mood", f"{mood_stats['average_mood']:.1f}", ft.Colors.BLUE_50),
-                    self.create_stat_card("Total Entries", str(mood_stats['total_entries']), ft.Colors.GREEN_50),
-                ], alignment=ft.MainAxisAlignment.SPACE_EVENLY)
-            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
-            padding=20,
-            bgcolor=ft.Colors.WHITE,
-            border_radius=10,
-            shadow=ft.BoxShadow(
-                spread_radius=1,
-                blur_radius=15,
-                color=ft.Colors.BLUE_GREY_300,
-                offset=ft.Offset(0, 0)
-            )
-        )
-
-    def create_stat_card(self, title: str, value: str, color: str):
-        """Create a statistics card"""
-        return ft.Container(
-            content=ft.Column([
-                ft.Text(title, size=16),
-                ft.Text(
-                    value,
-                    size=24,
-                    weight=ft.FontWeight.BOLD,
-                    color=ft.Colors.BLUE_600
-                )
-            ], alignment=ft.MainAxisAlignment.CENTER, spacing=5),
-            padding=20,
-            bgcolor=color,
-            border_radius=10,
-            width=200
-        )
-
-    def handle_login(self, page: ft.Page):
-        """Handle login form submission."""
-        username_or_email = self.username_field.value
-        password = self.password_field.value
-        
-        success, message, user = self.user_service.authenticate_user(username_or_email, password)
-        
-        if success:
-            self.current_user = user
-            self.show_dashboard(page)
-        else:
-            self.error_text.value = message
-            page.update()
-    
-    def handle_register(self, page: ft.Page):
-        """Handle registration form submission."""
-        username = self.reg_username_field.value
-        email = self.reg_email_field.value
-        password = self.reg_password_field.value
-        confirm_password = self.reg_confirm_password_field.value
-        
-        # Check if passwords match
-        if password != confirm_password:
-            self.reg_error_text.value = "Passwords do not match"
-            page.update()
-            return
-        
-        success, message, user = self.user_service.register_user(username, email, password)
-        
-        if success:
-            # Show success message and redirect to login
-            self.show_success_page(page, "Account created successfully! Please sign in.")
-        else:
-            self.reg_error_text.value = message
-            page.update()
-    
-    def show_success_page(self, page: ft.Page, message: str):
-        """Show success message and redirect to login."""
-        page.clean()
-        
-        success_text = ft.Text(
-            message,
-            size=16,
-            color=ft.Colors.GREEN_600,
-            text_align=ft.TextAlign.CENTER
-        )
-        
-        login_btn = ft.ElevatedButton(
-            "Go to Login",
-            on_click=lambda e: self.show_login_page(page),
-            style=ft.ButtonStyle(
-                bgcolor=ft.Colors.BLUE_600,
-                color=ft.Colors.WHITE
-            )
-        )
-        
-        page.add(
-            ft.Container(
-                content=ft.Column([
-                    ft.Icon(ft.Icons.CHECK_CIRCLE, color=ft.Colors.GREEN_600, size=50),
-                    ft.Container(height=20),
-                    success_text,
-                    ft.Container(height=20),
-                    login_btn
-                ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
-                padding=40,
-                bgcolor=ft.Colors.WHITE,
-                border_radius=10,
-                shadow=ft.BoxShadow(
-                    spread_radius=1,
-                    blur_radius=15,
-                    color=ft.Colors.BLUE_GREY_300,
-                    offset=ft.Offset(0, 0)
-                )
-            )
-        )
-        
-        page.update()
-    
-    def show_dashboard(self, page: ft.Page):
-        """Show main dashboard after successful login."""
-        page.clean()
-        
-        # Header with welcome and logout
-        header = ft.Container(
-            content=ft.Row(
-                [
-                    ft.Text(
-                        f"Welcome back, {self.current_user.username}!",
-                        size=24,
-                        weight=ft.FontWeight.BOLD,
-                        color=ft.Colors.BLUE_700
+                    ft.Container(
+                        content=ft.Column([
+                            ft.Text("Average Mood", size=16),
+                            self.average_mood_text
+                        ], alignment=ft.MainAxisAlignment.CENTER),
+                        padding=20,
+                        bgcolor=ft.Colors.BLUE_50,
+                        border_radius=10,
+                        width=200
                     ),
-                    ft.ElevatedButton(
-                        "Logout",
-                        on_click=lambda e: self.logout(page),
-                        style=ft.ButtonStyle(
-                            bgcolor=ft.Colors.RED_600,
-                            color=ft.Colors.WHITE
-                        )
-                    )
-                ],
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN
-            ),
-            padding=20
-        )
-
-        # Mood tracking section
-        mood_section = self.create_mood_section(page)
-        
-        # Stats section
-        stats_section = self.create_stats_section()
-        
-        # Add all sections to page
-        page.add(
-            header,
-            ft.Container(height=20),
-            mood_section,
-            ft.Container(height=20),
-            stats_section
-        )
-        
-        page.update()
-
-    def create_mood_section(self, page: ft.Page):
-        """Create the mood tracking section"""
-        return ft.Container(
-            content=ft.Column([
-                ft.Text(
-                    "How are you feeling today?",
-                    size=20,
-                    weight=ft.FontWeight.BOLD,
-                    color=ft.Colors.BLUE_700
-                ),
-                ft.Container(height=20),
-                ft.Row([
-                    self.create_mood_button("😢", "Very Bad", 1, page),
-                    self.create_mood_button("😕", "Not Great", 3, page),
-                    self.create_mood_button("😐", "Okay", 5, page),
-                    self.create_mood_button("🙂", "Good", 7, page),
-                    self.create_mood_button("😊", "Great", 10, page),
+                    ft.Container(
+                        content=ft.Column([
+                            ft.Text("Total Entries", size=16),
+                            self.total_entries_text
+                        ], alignment=ft.MainAxisAlignment.CENTER),
+                        padding=20,
+                        bgcolor=ft.Colors.GREEN_50,
+                        border_radius=10,
+                        width=200
+                    ),
                 ], alignment=ft.MainAxisAlignment.SPACE_EVENLY)
             ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
             padding=20,
@@ -660,86 +508,38 @@ class LoginApp:
                 color=ft.Colors.BLUE_GREY_300,
                 offset=ft.Offset(0, 0)
             )
-        )
-
-    def create_mood_button(self, emoji: str, text: str, level: int, page: ft.Page):
-        """Create a mood selection button"""
-        return ft.ElevatedButton(
-            content=ft.Column([
-                ft.Text(emoji, size=30),
-                ft.Text(text, size=12)
-            ], alignment=ft.MainAxisAlignment.CENTER, spacing=5),
-            on_click=lambda e: self.log_mood(level, page),
-            style=ft.ButtonStyle(
-                padding=20,
-                bgcolor=ft.Colors.WHITE,
-                color=ft.Colors.BLUE_700
-            )
-        )
-
-    def create_stats_section(self):
-        """Create the statistics section"""
-        mood_stats = self.mood_service.get_mood_statistics(self.current_user.user_id)
-        
-        return ft.Container(
-            content=ft.Column([
-                ft.Text(
-                    "Your Mood Statistics",
-                    size=20,
-                    weight=ft.FontWeight.BOLD,
-                    color=ft.Colors.BLUE_700
-                ),
-                ft.Container(height=10),
-                ft.Row([
-                    self.create_stat_card("Average Mood", f"{mood_stats['average_mood']:.1f}", ft.Colors.BLUE_50),
-                    self.create_stat_card("Total Entries", str(mood_stats['total_entries']), ft.Colors.GREEN_50),
-                ], alignment=ft.MainAxisAlignment.SPACE_EVENLY)
-            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
-            padding=20,
-            bgcolor=ft.Colors.WHITE,
-            border_radius=10,
-            shadow=ft.BoxShadow(
-                spread_radius=1,
-                blur_radius=15,
-                color=ft.Colors.BLUE_GREY_300,
-                offset=ft.Offset(0, 0)
-            )
-        )
-
-    def create_stat_card(self, title: str, value: str, color: str):
-        """Create a statistics card"""
-        return ft.Container(
-            content=ft.Column([
-                ft.Text(title, size=16),
-                ft.Text(
-                    value,
-                    size=24,
-                    weight=ft.FontWeight.BOLD,
-                    color=ft.Colors.BLUE_600
-                )
-            ], alignment=ft.MainAxisAlignment.CENTER, spacing=5),
-            padding=20,
-            bgcolor=color,
-            border_radius=10,
-            width=200
         )
 
     def log_mood(self, mood_level: int, page: ft.Page):
-        """Log user's mood and refresh dashboard."""
-        success, message, mood = self.mood_service.log_mood(
+        """Log user's mood and update statistics in real-time."""
+        if not self.current_user:
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text("Please log in first"),
+                bgcolor=ft.Colors.RED_600
+            )
+            page.update()
+            return
+
+        success, message, stats = self.mood_service.log_mood(
             self.current_user.user_id,
             mood_level
         )
-        
-        if success:
-            self.show_dashboard(page)
-        else:
-            page.show_snack_bar(
-                ft.SnackBar(
-                    content=ft.Text(message),
-                    bgcolor=ft.Colors.RED_600
-                )
+
+        if success and stats:
+            # Update the stats text fields directly
+            self.average_mood_text.value = f"{stats['average_mood']:.1f}"
+            self.total_entries_text.value = str(stats['total_entries'])
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text("Mood logged successfully!"),
+                bgcolor=ft.Colors.GREEN_600
             )
+            page.update()
+        else:
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text(message),
+                bgcolor=ft.Colors.RED_600
+            )
+            page.update()
 
     def logout(self, page: ft.Page):
         """Handle user logout."""
@@ -754,120 +554,3 @@ def main(page: ft.Page):
 
 if __name__ == "__main__":
     ft.app(target=main)
-=======
-import flet as ft
-
-def create_mood_button(self, emoji: str, text: str, level: str, page: ft.Page):
-    """Create a mood button with emoji and text."""
-    return ft.Container(
-        content=ft.Column([
-            ft.Text(emoji, size=40),
-            ft.Text(text, size=16)
-        ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
-        on_click=lambda e: self.log_mood(level, page),
-        padding=20,
-        border_radius=10,
-        bgcolor=ft.colors.BLUE_50,
-        ink=True
-    )
-
-def log_mood(self, mood_level: str, page: ft.Page):
-    """Log user's mood and update statistics."""
-    if not self.current_user:
-        page.show_snack_bar(
-            ft.SnackBar(
-                content=ft.Text("Please log in to track your mood"),
-                bgcolor=ft.colors.RED_600
-            )
-        )
-        return
-
-    # Map text mood levels to numerical values
-    mood_values = {
-        "Very Bad": 1,
-        "Not Great": 2,
-        "Okay": 3,
-        "Good": 4,
-        "Great": 5
-    }
-
-    success, message, stats = self.mood_service.log_mood(
-        self.current_user.user_id,
-        mood_values.get(mood_level, 3)
-    )
-    
-    if success and stats:
-        # Update the stats display
-        self.show_dashboard(page)
-        
-        page.show_snack_bar(
-            ft.SnackBar(
-                content=ft.Text("Mood logged successfully!"),
-                bgcolor=ft.colors.GREEN_600
-            )
-        )
-    else:
-        page.show_snack_bar(
-            ft.SnackBar(
-                content=ft.Text(f"Error: {message}"),
-                bgcolor=ft.colors.RED_600
-            )
-        )
-
-def create_stats_section(self):
-    """Create the statistics section"""
-    stats = self.mood_service.get_mood_statistics(self.current_user.user_id)
-    
-    return ft.Container(
-        content=ft.Column([
-            ft.Text(
-                "Your Mood Statistics",
-                size=20,
-                weight=ft.FontWeight.BOLD,
-                color=ft.Colors.BLUE_700
-            ),
-            ft.Container(height=10),
-            ft.Row([
-                ft.Container(
-                    content=ft.Column([
-                        ft.Text("Average Mood", size=16),
-                        ft.Text(
-                            f"{stats['average_mood']:.1f}",
-                            size=24,
-                            weight=ft.FontWeight.BOLD,
-                            color=ft.Colors.BLUE_600
-                        )
-                    ], alignment=ft.MainAxisAlignment.CENTER),
-                    padding=20,
-                    bgcolor=ft.colors.BLUE_50,
-                    border_radius=10,
-                    width=200
-                ),
-                ft.Container(
-                    content=ft.Column([
-                        ft.Text("Total Entries", size=16),
-                        ft.Text(
-                            str(stats['total_entries']),
-                            size=24,
-                            weight=ft.FontWeight.BOLD,
-                            color=ft.Colors.GREEN_600
-                        )
-                    ], alignment=ft.MainAxisAlignment.CENTER),
-                    padding=20,
-                    bgcolor=ft.colors.GREEN_50,
-                    border_radius=10,
-                    width=200
-                )
-            ], alignment=ft.MainAxisAlignment.SPACE_EVENLY)
-        ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
-        padding=20,
-        bgcolor=ft.Colors.WHITE,
-        border_radius=10,
-        shadow=ft.BoxShadow(
-            spread_radius=1,
-            blur_radius=15,
-            color=ft.Colors.BLUE_GREY_300,
-            offset=ft.Offset(0, 0)
-        )
-    )
->>>>>>> a48918f (Updated the Login Function and Real-time UI)
