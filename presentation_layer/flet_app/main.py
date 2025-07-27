@@ -8,32 +8,99 @@ sys.path.append(project_root)
 
 import flet as ft
 from business_layer.services.user_service import UserService
+from business_layer.services.mood_service import MoodService
 from data_layer.database.connection import DatabaseConnection
+import matplotlib.pyplot as plt
+from io import BytesIO
+import base64
 
 class LoginApp:
     """Main Flet application for user authentication."""
     
     def __init__(self):
         self.user_service = UserService()
+        self.mood_service = MoodService()
         self.current_user = None
         
         # Initialize database
         db = DatabaseConnection()
         db.initialize_database()
-    
+
     def main(self, page: ft.Page):
-        """Main application entry point."""
-        page.title = "MindfulBalance - Login"
+        page.title = "MindfulBalance"
         page.theme_mode = ft.ThemeMode.LIGHT
-        page.window_width = 400
-        page.window_height = 500
+        page.window_width = 1000  # Wider window for dashboard
+        page.window_height = 800
         page.window_resizable = False
         page.vertical_alignment = ft.MainAxisAlignment.CENTER
         page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
         
-        # Show login page initially
-        self.show_login_page(page)
-    
+        # Show welcome screen initially
+        self.show_welcome_screen(page)
+
+    def show_welcome_screen(self, page: ft.Page):
+        """Display the initial welcome screen"""
+        page.clean()
+        
+        # Welcome title
+        title = ft.Text(
+            "Welcome to MindfulBalance",
+            size=32,
+            weight=ft.FontWeight.BOLD,
+            color=ft.Colors.BLUE_700
+        )
+        
+        subtitle = ft.Text(
+            "Your daily companion for mental wellness",
+            size=16,
+            color=ft.Colors.GREY_600
+        )
+        
+        # Login button
+        login_btn = ft.ElevatedButton(
+            "Sign In",
+            width=200,
+            on_click=lambda e: self.show_login_page(page),
+            style=ft.ButtonStyle(
+                bgcolor=ft.Colors.BLUE_600,
+                color=ft.Colors.WHITE
+            )
+        )
+        
+        # Register button
+        register_btn = ft.OutlinedButton(
+            "Create Account",
+            width=200,
+            on_click=lambda e: self.show_register_page(page)
+        )
+        
+        # Layout
+        page.add(
+            ft.Container(
+                content=ft.Column([
+                    ft.Icon(ft.Icons.PSYCHOLOGY_ALT, size=100, color=ft.Colors.BLUE_600),
+                    ft.Container(height=20),
+                    title,
+                    subtitle,
+                    ft.Container(height=40),
+                    login_btn,
+                    ft.Container(height=10),
+                    register_btn,
+                ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+                padding=40,
+                bgcolor=ft.Colors.WHITE,
+                border_radius=10,
+                shadow=ft.BoxShadow(
+                    spread_radius=1,
+                    blur_radius=15,
+                    color=ft.Colors.BLUE_GREY_300,
+                    offset=ft.Offset(0, 0)
+                )
+            )
+        )
+        
+        page.update()
+
     def show_login_page(self, page: ft.Page):
         """Display the login page."""
         page.clean()
@@ -307,48 +374,203 @@ class LoginApp:
         """Show main dashboard after successful login."""
         page.clean()
         
-        welcome_text = ft.Text(
-            f"Welcome, {self.current_user.username}!",
-            size=24,
-            weight=ft.FontWeight.BOLD,
-            color=ft.Colors.BLUE_700
+        # Header with welcome and logout
+        header = ft.Container(
+            content=ft.Row(
+                [
+                    ft.Text(
+                        f"Welcome back, {self.current_user.username}!",
+                        size=24,
+                        weight=ft.FontWeight.BOLD,
+                        color=ft.Colors.BLUE_700
+                    ),
+                    ft.ElevatedButton(
+                        "Logout",
+                        on_click=lambda e: self.logout(page),
+                        style=ft.ButtonStyle(
+                            bgcolor=ft.Colors.RED_600,
+                            color=ft.Colors.WHITE
+                        )
+                    )
+                ],
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+            ),
+            padding=20
+        )
+
+        # Mood tracking section
+        mood_section = self.create_mood_section(page)
+        
+        # Stats section
+        stats_section = self.create_stats_section()
+        
+        # Add all sections to page
+        page.add(
+            header,
+            ft.Container(height=20),
+            mood_section,
+            ft.Container(height=20),
+            stats_section
         )
         
-        subtitle = ft.Text(
-            "Community Mental Health Tracker Dashboard",
-            size=16,
-            color=ft.Colors.GREY_600
-        )
-        
-        logout_btn = ft.ElevatedButton(
-            "Logout",
-            on_click=lambda e: self.logout(page),
-            style=ft.ButtonStyle(
-                bgcolor=ft.Colors.RED_600,
-                color=ft.Colors.WHITE
+        page.update()
+
+    def create_mood_section(self, page: ft.Page):
+        """Create the mood tracking section"""
+        return ft.Container(
+            content=ft.Column([
+                ft.Text(
+                    "How are you feeling today?",
+                    size=20,
+                    weight=ft.FontWeight.BOLD,
+                    color=ft.Colors.BLUE_700
+                ),
+                ft.Container(height=20),
+                ft.Row([
+                    self.create_mood_button("😢", "Very Bad", 1, page),
+                    self.create_mood_button("😕", "Not Great", 3, page),
+                    self.create_mood_button("😐", "Okay", 5, page),
+                    self.create_mood_button("🙂", "Good", 7, page),
+                    self.create_mood_button("😊", "Great", 10, page),
+                ], alignment=ft.MainAxisAlignment.SPACE_EVENLY)
+            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+            padding=20,
+            bgcolor=ft.Colors.WHITE,
+            border_radius=10,
+            shadow=ft.BoxShadow(
+                spread_radius=1,
+                blur_radius=15,
+                color=ft.Colors.BLUE_GREY_300,
+                offset=ft.Offset(0, 0)
             )
         )
+
+    def create_mood_button(self, emoji: str, text: str, level: int, page: ft.Page):
+        """Create a mood selection button"""
+        return ft.ElevatedButton(
+            content=ft.Column([
+                ft.Text(emoji, size=30),
+                ft.Text(text, size=12)
+            ], alignment=ft.MainAxisAlignment.CENTER, spacing=5),
+            on_click=lambda e: self.log_mood(level, page),
+            style=ft.ButtonStyle(
+                padding=20,
+                bgcolor=ft.Colors.WHITE,
+                color=ft.Colors.BLUE_700
+            )
+        )
+
+    def create_stats_section(self):
+        """Create the statistics section"""
+        mood_stats = self.mood_service.get_mood_statistics(self.current_user.user_id)
         
-        # Placeholder for future dashboard content
-        dashboard_content = ft.Text(
-            "Dashboard content will go here...\n"
-            "• Mood tracking\n"
-            "• Journal entries\n"
-            "• Analytics\n"
-            "• Coping strategies",
-            size=14,
-            color=ft.Colors.GREY_700
+        return ft.Container(
+            content=ft.Column([
+                ft.Text(
+                    "Your Mood Statistics",
+                    size=20,
+                    weight=ft.FontWeight.BOLD,
+                    color=ft.Colors.BLUE_700
+                ),
+                ft.Container(height=10),
+                ft.Row([
+                    self.create_stat_card("Average Mood", f"{mood_stats['average_mood']:.1f}", ft.Colors.BLUE_50),
+                    self.create_stat_card("Total Entries", str(mood_stats['total_entries']), ft.Colors.GREEN_50),
+                ], alignment=ft.MainAxisAlignment.SPACE_EVENLY)
+            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+            padding=20,
+            bgcolor=ft.Colors.WHITE,
+            border_radius=10,
+            shadow=ft.BoxShadow(
+                spread_radius=1,
+                blur_radius=15,
+                color=ft.Colors.BLUE_GREY_300,
+                offset=ft.Offset(0, 0)
+            )
+        )
+
+    def create_stat_card(self, title: str, value: str, color: str):
+        """Create a statistics card"""
+        return ft.Container(
+            content=ft.Column([
+                ft.Text(title, size=16),
+                ft.Text(
+                    value,
+                    size=24,
+                    weight=ft.FontWeight.BOLD,
+                    color=ft.Colors.BLUE_600
+                )
+            ], alignment=ft.MainAxisAlignment.CENTER, spacing=5),
+            padding=20,
+            bgcolor=color,
+            border_radius=10,
+            width=200
+        )
+
+    def handle_login(self, page: ft.Page):
+        """Handle login form submission."""
+        username_or_email = self.username_field.value
+        password = self.password_field.value
+        
+        success, message, user = self.user_service.authenticate_user(username_or_email, password)
+        
+        if success:
+            self.current_user = user
+            self.show_dashboard(page)
+        else:
+            self.error_text.value = message
+            page.update()
+    
+    def handle_register(self, page: ft.Page):
+        """Handle registration form submission."""
+        username = self.reg_username_field.value
+        email = self.reg_email_field.value
+        password = self.reg_password_field.value
+        confirm_password = self.reg_confirm_password_field.value
+        
+        # Check if passwords match
+        if password != confirm_password:
+            self.reg_error_text.value = "Passwords do not match"
+            page.update()
+            return
+        
+        success, message, user = self.user_service.register_user(username, email, password)
+        
+        if success:
+            # Show success message and redirect to login
+            self.show_success_page(page, "Account created successfully! Please sign in.")
+        else:
+            self.reg_error_text.value = message
+            page.update()
+    
+    def show_success_page(self, page: ft.Page, message: str):
+        """Show success message and redirect to login."""
+        page.clean()
+        
+        success_text = ft.Text(
+            message,
+            size=16,
+            color=ft.Colors.GREEN_600,
+            text_align=ft.TextAlign.CENTER
+        )
+        
+        login_btn = ft.ElevatedButton(
+            "Go to Login",
+            on_click=lambda e: self.show_login_page(page),
+            style=ft.ButtonStyle(
+                bgcolor=ft.Colors.BLUE_600,
+                color=ft.Colors.WHITE
+            )
         )
         
         page.add(
             ft.Container(
                 content=ft.Column([
-                    welcome_text,
-                    subtitle,
-                    ft.Container(height=30),
-                    dashboard_content,
-                    ft.Container(height=30),
-                    logout_btn
+                    ft.Icon(ft.Icons.CHECK_CIRCLE, color=ft.Colors.GREEN_600, size=50),
+                    ft.Container(height=20),
+                    success_text,
+                    ft.Container(height=20),
+                    login_btn
                 ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
                 padding=40,
                 bgcolor=ft.Colors.WHITE,
@@ -364,10 +586,166 @@ class LoginApp:
         
         page.update()
     
+    def show_dashboard(self, page: ft.Page):
+        """Show main dashboard after successful login."""
+        page.clean()
+        
+        # Header with welcome and logout
+        header = ft.Container(
+            content=ft.Row(
+                [
+                    ft.Text(
+                        f"Welcome back, {self.current_user.username}!",
+                        size=24,
+                        weight=ft.FontWeight.BOLD,
+                        color=ft.Colors.BLUE_700
+                    ),
+                    ft.ElevatedButton(
+                        "Logout",
+                        on_click=lambda e: self.logout(page),
+                        style=ft.ButtonStyle(
+                            bgcolor=ft.Colors.RED_600,
+                            color=ft.Colors.WHITE
+                        )
+                    )
+                ],
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+            ),
+            padding=20
+        )
+
+        # Mood tracking section
+        mood_section = self.create_mood_section(page)
+        
+        # Stats section
+        stats_section = self.create_stats_section()
+        
+        # Add all sections to page
+        page.add(
+            header,
+            ft.Container(height=20),
+            mood_section,
+            ft.Container(height=20),
+            stats_section
+        )
+        
+        page.update()
+
+    def create_mood_section(self, page: ft.Page):
+        """Create the mood tracking section"""
+        return ft.Container(
+            content=ft.Column([
+                ft.Text(
+                    "How are you feeling today?",
+                    size=20,
+                    weight=ft.FontWeight.BOLD,
+                    color=ft.Colors.BLUE_700
+                ),
+                ft.Container(height=20),
+                ft.Row([
+                    self.create_mood_button("😢", "Very Bad", 1, page),
+                    self.create_mood_button("😕", "Not Great", 3, page),
+                    self.create_mood_button("😐", "Okay", 5, page),
+                    self.create_mood_button("🙂", "Good", 7, page),
+                    self.create_mood_button("😊", "Great", 10, page),
+                ], alignment=ft.MainAxisAlignment.SPACE_EVENLY)
+            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+            padding=20,
+            bgcolor=ft.Colors.WHITE,
+            border_radius=10,
+            shadow=ft.BoxShadow(
+                spread_radius=1,
+                blur_radius=15,
+                color=ft.Colors.BLUE_GREY_300,
+                offset=ft.Offset(0, 0)
+            )
+        )
+
+    def create_mood_button(self, emoji: str, text: str, level: int, page: ft.Page):
+        """Create a mood selection button"""
+        return ft.ElevatedButton(
+            content=ft.Column([
+                ft.Text(emoji, size=30),
+                ft.Text(text, size=12)
+            ], alignment=ft.MainAxisAlignment.CENTER, spacing=5),
+            on_click=lambda e: self.log_mood(level, page),
+            style=ft.ButtonStyle(
+                padding=20,
+                bgcolor=ft.Colors.WHITE,
+                color=ft.Colors.BLUE_700
+            )
+        )
+
+    def create_stats_section(self):
+        """Create the statistics section"""
+        mood_stats = self.mood_service.get_mood_statistics(self.current_user.user_id)
+        
+        return ft.Container(
+            content=ft.Column([
+                ft.Text(
+                    "Your Mood Statistics",
+                    size=20,
+                    weight=ft.FontWeight.BOLD,
+                    color=ft.Colors.BLUE_700
+                ),
+                ft.Container(height=10),
+                ft.Row([
+                    self.create_stat_card("Average Mood", f"{mood_stats['average_mood']:.1f}", ft.Colors.BLUE_50),
+                    self.create_stat_card("Total Entries", str(mood_stats['total_entries']), ft.Colors.GREEN_50),
+                ], alignment=ft.MainAxisAlignment.SPACE_EVENLY)
+            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+            padding=20,
+            bgcolor=ft.Colors.WHITE,
+            border_radius=10,
+            shadow=ft.BoxShadow(
+                spread_radius=1,
+                blur_radius=15,
+                color=ft.Colors.BLUE_GREY_300,
+                offset=ft.Offset(0, 0)
+            )
+        )
+
+    def create_stat_card(self, title: str, value: str, color: str):
+        """Create a statistics card"""
+        return ft.Container(
+            content=ft.Column([
+                ft.Text(title, size=16),
+                ft.Text(
+                    value,
+                    size=24,
+                    weight=ft.FontWeight.BOLD,
+                    color=ft.Colors.BLUE_600
+                )
+            ], alignment=ft.MainAxisAlignment.CENTER, spacing=5),
+            padding=20,
+            bgcolor=color,
+            border_radius=10,
+            width=200
+        )
+
+    def log_mood(self, mood_level: int, page: ft.Page):
+        """Log user's mood and refresh dashboard."""
+        success, message, mood = self.mood_service.log_mood(
+            self.current_user.user_id,
+            mood_level
+        )
+        
+        if success:
+            self.show_dashboard(page)
+        else:
+            page.show_snack_bar(
+                ft.SnackBar(
+                    content=ft.Text(message),
+                    bgcolor=ft.Colors.RED_600
+                )
+            )
+
     def logout(self, page: ft.Page):
         """Handle user logout."""
         self.current_user = None
-        self.show_login_page(page)
+        page.window_width = 400
+        page.window_height = 500
+        self.show_welcome_screen(page)
 
 def main(page: ft.Page):
     app = LoginApp()
