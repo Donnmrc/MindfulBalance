@@ -25,7 +25,7 @@ class LoginApp:
         self.latest_journal = ""  # <-- Add this line
         self.last_mood_level = None  # Track last mood selected
         
-        # Initialize database
+        # Initialize databaseeeeeee
         db = DatabaseConnection()
         db.initialize_database()
 
