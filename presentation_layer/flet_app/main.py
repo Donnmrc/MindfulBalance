@@ -174,8 +174,28 @@ class LoginApp:
             plt.close()  # Close to free memory
 
             print("Plot saved successfully, showing dialog...")  # Debug
-            
-            # Show the plot in a dialog
+
+            # Show a nice popup dialog
+            def close_dialog(e):
+                page.dialog.open = False
+                page.update()
+
+            dialog = ft.AlertDialog(
+                title=ft.Text("Analytics Created!", size=18, weight=ft.FontWeight.BOLD),
+                content=ft.Text(
+                    "Successfully created a Matplotlib graph! You can view it in the app or check your local folder for 'mood_plot.png'.",
+                    size=16,
+                    color=ft.Colors.BLUE_700
+                ),
+                actions=[ft.TextButton("OK", on_click=close_dialog)],
+                open=True
+            )
+            page.dialog = dialog
+            if dialog not in page.controls:
+                page.controls.append(dialog)
+            page.update()
+
+            # Optionally, still show the plot in-app as before:
             self.show_plot_dialog(page, plot_path)
 
         except Exception as e:
