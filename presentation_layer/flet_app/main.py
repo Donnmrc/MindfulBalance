@@ -15,6 +15,7 @@ sys.path.append(project_root)
 import flet as ft
 from business_layer.services.user_service import UserService
 from business_layer.services.mood_service import MoodService
+from business_layer.services.mental_tip_service import get_mental_tip
 from data_layer.database.connection import DatabaseConnection
 from io import BytesIO
 import base64
@@ -832,8 +833,8 @@ class LoginApp:
                     f.write(f"{timestamp}: {journal_text}\n")
             page.dialog.open = False
             page.update()
-            # Show mental tip after closing journal dialog
-            tip = self.get_mental_tip(self.last_mood_level)
+            # Use business layer for tip
+            tip = get_mental_tip(self.last_mood_level)
             tip_dialog = ft.AlertDialog(
                 title=ft.Text("Mental Health Tip"),
                 content=ft.Text(tip),
