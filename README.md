@@ -2,6 +2,73 @@
 
 A mental health tracking application built with Flet that helps users monitor their daily mood, create journal entries, and visualize their wellness journey through interactive analytics.
 
+
+# Project Structure
+├── business_layer
+│   ├── __init__.py
+│   ├── models
+│   │   ├── __init__.py
+│   │   ├── mood.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-311.pyc
+│   │   │   ├── __init__.cpython-312.pyc
+│   │   │   ├── mood.cpython-311.pyc
+│   │   │   ├── mood.cpython-312.pyc
+│   │   │   ├── user.cpython-311.pyc
+│   │   │   └── user.cpython-312.pyc
+│   │   └── user.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-311.pyc
+│   │   └── __init__.cpython-312.pyc
+│   ├── services
+│   │   ├── __init__.py
+│   │   ├── mood_service.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-311.pyc
+│   │   │   ├── __init__.cpython-312.pyc
+│   │   │   ├── mood_service.cpython-311.pyc
+│   │   │   ├── mood_service.cpython-312.pyc
+│   │   │   ├── user_service.cpython-311.pyc
+│   │   │   └── user_service.cpython-312.pyc
+│   │   └── user_service.py
+│   └── user.py
+├── data
+│   └── mindfulbalance.db
+├── data_layer
+│   ├── dao
+│   │   ├── __init__.py
+│   │   ├── mood_dao.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-311.pyc
+│   │   │   ├── __init__.cpython-312.pyc
+│   │   │   ├── mood_dao.cpython-311.pyc
+│   │   │   ├── mood_dao.cpython-312.pyc
+│   │   │   ├── user_dao.cpython-311.pyc
+│   │   │   └── user_dao.cpython-312.pyc
+│   │   └── user_dao.py
+│   ├── database
+│   │   ├── connection.py
+│   │   ├── __init__.py
+│   │   ├── mental_health_tracker.db
+│   │   └── __pycache__
+│   │       ├── connection.cpython-311.pyc
+│   │       ├── connection.cpython-312.pyc
+│   │       ├── __init__.cpython-311.pyc
+│   │       └── __init__.cpython-312.pyc
+│   ├── __init__.py
+│   └── __pycache__
+│       ├── __init__.cpython-311.pyc
+│       └── __init__.cpython-312.pyc
+├── __init__.py
+├── presentation_layer
+│   ├── flet_app
+│   │   ├── __init__.py
+│   │   ├── main.py
+│   │   └── mood_plot.png
+│   └── __init__.py
+├── README.md
+└── requirements.txt
+
 ## Getting Started
 
 ### Prerequisites
