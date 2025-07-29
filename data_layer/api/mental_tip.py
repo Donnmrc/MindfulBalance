@@ -1,14 +1,15 @@
 def get_mental_tip(self, mood_level: int) -> str:
     """Return a mental health tip based on mood level."""
-    if mood_level == 1:
-        return "It's okay to feel very bad. Reach out to someone you trust and take care of yourself."
-    elif mood_level == 3:
-        return "Not feeling great? Try some deep breathing or a short walk to lift your spirits."
-    elif mood_level == 5:
-        return "Feeling okay is a good start. Consider writing down something you're grateful for."
-    elif mood_level == 7:
-        return "Good mood! Keep up the positive habits and share your smile with others."
-    elif mood_level == 10:
-        return "That's a great mood! Keep being happy and spread your joy!"
+    if mood_level <= 2:
+        return "It's okay to feel down. Try talking to a friend or practicing deep breathing."
+    elif mood_level <= 4:
+        return "Take a short walk or listen to your favorite music to lift your mood."
+    elif mood_level <= 6:
+        return "Keep going! A little self-care goes a long way."
+    elif mood_level <= 8:
+        return "Great job! Remember to share your positivity with others."
     else:
-        return "Take care of yourself and remember every mood is valid."
+        return "You're doing amazing! Keep up the positive mindset!"
+
+
+

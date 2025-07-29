@@ -825,7 +825,6 @@ class LoginApp:
             import datetime
             journal_text = journal_field.value.strip()
             if journal_text:
-                # Save journal entry to file
                 file_path = os.path.join(os.path.dirname(__file__), "journal_history.txt")
                 with open(file_path, "a", encoding="utf-8") as f:
                     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -833,7 +832,7 @@ class LoginApp:
             page.dialog.open = False
             page.update()
             # Use business layer for tip
-            tip = self.get_mental_tip(self.last_mood_level)
+            tip = self.get_mental_tip(self.last_mood_level)  # <-- FIXED
             tip_dialog = ft.AlertDialog(
                 title=ft.Text("Mental Health Tip"),
                 content=ft.Text(tip),
