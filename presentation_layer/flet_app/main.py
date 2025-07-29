@@ -587,7 +587,7 @@ class LoginApp:
     def show_dashboard(self, page: ft.Page):
         """Show main dashboard after successful login."""
         page.clean()
-        
+
         # Header with welcome and logout
         header = ft.Container(
             content=ft.Row(
@@ -628,20 +628,13 @@ class LoginApp:
         # Stats section
         stats_section = self.create_stats_section()
         
-        # Journal display section
-        journal_display = ft.Container(
-            content=ft.Column([
-                ft.Text("Latest Journal Entry", size=18, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_700),
-                ft.Text(self.latest_journal or "No journal entry yet.", size=14, color=ft.Colors.GREY_700)
-            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
-            padding=20,
-            bgcolor=ft.Colors.AMBER_50,
-            border_radius=10,
-            shadow=ft.BoxShadow(
-                spread_radius=1,
-                blur_radius=10,
-                color=ft.Colors.BLUE_GREY_100,
-                offset=ft.Offset(0, 0)
+        # Journal history button
+        journal_history_btn = ft.ElevatedButton(
+            "View Journal History",
+            on_click=lambda e: self.show_journal_history(page),
+            style=ft.ButtonStyle(
+                bgcolor=ft.Colors.AMBER_700,
+                color=ft.Colors.WHITE
             )
         )
 
@@ -649,11 +642,11 @@ class LoginApp:
         page.add(
             header,
             ft.Container(height=10),
-            analytics_btn,  # Add this line
+            analytics_btn,
             ft.Container(height=20),
             mood_section,
             ft.Container(height=20),
-            journal_display,  # <-- Add this line
+            journal_history_btn,  # <-- Add this line
             ft.Container(height=20),
             stats_section
         )
@@ -829,11 +822,17 @@ class LoginApp:
         )
 
         def save_journal(e):
-            self.latest_journal = journal_field.value  # Save the journal text
+            import datetime
+            journal_text = journal_field.value.strip()
+            if journal_text:
+                # Save journal entry to file
+                file_path = os.path.join(os.path.dirname(__file__), "journal_history.txt")
+                with open(file_path, "a", encoding="utf-8") as f:
+                    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    f.write(f"{timestamp}: {journal_text}\n")
             page.dialog.open = False
             page.update()
-            self.show_dashboard(page)  # Refresh dashboard to show the journal
-            # Show mental tip after dashboard refresh
+            # Show mental tip after closing journal dialog
             tip = self.get_mental_tip(self.last_mood_level)
             tip_dialog = ft.AlertDialog(
                 title=ft.Text("Mental Health Tip"),
@@ -880,6 +879,35 @@ class LoginApp:
             return "Great job! Remember to share your positivity with others."
         else:
             return "You're doing amazing! Keep up the positive mindset!"
+
+    def show_journal_history(self, page: ft.Page):
+        """Show a dialog with the history of journal entries from file."""
+        file_path = os.path.join(os.path.dirname(__file__), "journal_history.txt")
+        if os.path.exists(file_path):
+            with open(file_path, "r", encoding="utf-8") as f:
+                lines = [line.strip() for line in f if line.strip()]
+            if lines:
+                content = ft.Column(
+                    [ft.Text(entry, size=14) for entry in lines],
+                    scroll="auto",
+                    width=400,
+                    height=400
+                )
+            else:
+                content = ft.Text("No journal entries found.", size=14)
+        else:
+            content = ft.Text("No journal entries found.", size=14)
+
+        dialog = ft.AlertDialog(
+            title=ft.Text("Journal History"),
+            content=content,
+            actions=[ft.TextButton("Close", on_click=lambda e: self.close_tip_dialog(page))],
+            open=True
+        )
+        page.dialog = dialog
+        if dialog not in page.controls:
+            page.controls.append(dialog)
+        page.update()
 
 def main(page: ft.Page):
     app = LoginApp()
