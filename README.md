@@ -4,38 +4,33 @@ A mental health tracking application built with Flet that helps users monitor th
 
 
 # Project Structure
-|-- business_layer
-|   |-- __init__.py
-|   |-- models
-|   |   |-- __init__.py
-|   |   |-- mood.py
-|   |   `-- user.py
-|   |-- services
-|   |   |-- __init__.py
-|   |   |-- mood_service.py
-|   |   `-- user_service.py
-|   `-- user.py
-|-- data
-|   `-- mindfulbalance.db
-|-- data_layer
-|   |-- dao
-|   |   |-- __init__.py
-|   |   |-- mood_dao.py
-|   |   `-- user_dao.py
-|   |-- database
-|   |   |-- connection.py
-|   |   |-- __init__.py
-|   |   `-- mental_health_tracker.db
-|   `-- __init__.py
-|-- __init__.py
-|-- presentation_layer
-|   |-- flet_app
-|   |   |-- __init__.py
-|   |   |-- main.py
-|   |   `-- mood_plot.png
-|   `-- __init__.py
-|-- README.md
-`-- requirements.txt
+|.
+├── business_layer/             # Business logic and models
+│   ├── models/                 # Data models
+│   │   ├── __init__.py
+│   │   ├── mood.py
+│   │   └── user.py
+│   └── services/               # Business logic services
+│       ├── __init__.py
+│       ├── mood_service.py
+│       └── user_service.py
+├── data_layer/                 # Data access layer
+│   ├── dao/                    # Data access objects
+│   │   ├── __init__.py
+│   │   ├── mood_dao.py
+│   │   └── user_dao.py
+│   └── database/               # Database configuration
+│       ├── __init__.py
+│       └── connection.py
+├── presentation_layer/         # User interface layer
+│   └── flet_app/               # Flet GUI application
+│       ├── __init__.py
+│       ├── main.py
+│       └── mood_plot.png
+├── data/                       # Database files
+│   └── mindfulbalance.db
+├── README.md                   # Project documentation
+└── requirements.txt            # Python dependencies
 
 ## Getting Started
 
