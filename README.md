@@ -2,36 +2,6 @@
 
 A mental health tracking application built with Flet that helps users monitor their daily mood, create journal entries, and visualize their wellness journey through interactive analytics.
 
-
-# Project Structure
-|.
-├── business_layer/             # Business logic and models
-│   ├── models/                 # Data models
-│   │   ├── __init__.py
-│   │   ├── mood.py
-│   │   └── user.py
-│   └── services/               # Business logic services
-│       ├── __init__.py
-│       ├── mood_service.py
-│       └── user_service.py
-├── data_layer/                 # Data access layer
-│   ├── dao/                    # Data access objects
-│   │   ├── __init__.py
-│   │   ├── mood_dao.py
-│   │   └── user_dao.py
-│   └── database/               # Database configuration
-│       ├── __init__.py
-│       └── connection.py
-├── presentation_layer/         # User interface layer
-│   └── flet_app/               # Flet GUI application
-│       ├── __init__.py
-│       ├── main.py
-│       └── mood_plot.png
-├── data/                       # Database files
-│   └── mindfulbalance.db
-├── README.md                   # Project documentation
-└── requirements.txt            # Python dependencies
-
 ## Getting Started
 
 ### Prerequisites
