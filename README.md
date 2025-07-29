@@ -4,37 +4,38 @@ A mental health tracking application built with Flet that helps users monitor th
 
 
 # Project Structure
-MindfulBalance/
-    business_layer/
-        __init__.py
-        models/
-            __init__.py
-            mood.py
-            user.py
-        services/
-            __init__.py
-            mood_service.py
-            user_service.py
-        user.py
-    data/
-        mindfulbalance.db
-    data_layer/
-        __init__.py
-        dao/
-            __init__.py
-            mood_dao.py
-            user_dao.py
-        database/
-            __init__.py
-            connection.py
-    presentation_layer/
-        __init__.py
-        flet_app/
-            __init__.py
-            main.py
-            mood_plot.png
-    README.md
-    requirements.txt
+|-- business_layer
+|   |-- __init__.py
+|   |-- models
+|   |   |-- __init__.py
+|   |   |-- mood.py
+|   |   `-- user.py
+|   |-- services
+|   |   |-- __init__.py
+|   |   |-- mood_service.py
+|   |   `-- user_service.py
+|   `-- user.py
+|-- data
+|   `-- mindfulbalance.db
+|-- data_layer
+|   |-- dao
+|   |   |-- __init__.py
+|   |   |-- mood_dao.py
+|   |   `-- user_dao.py
+|   |-- database
+|   |   |-- connection.py
+|   |   |-- __init__.py
+|   |   `-- mental_health_tracker.db
+|   `-- __init__.py
+|-- __init__.py
+|-- presentation_layer
+|   |-- flet_app
+|   |   |-- __init__.py
+|   |   |-- main.py
+|   |   `-- mood_plot.png
+|   `-- __init__.py
+|-- README.md
+`-- requirements.txt
 
 ## Getting Started
 
